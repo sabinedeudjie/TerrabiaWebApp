@@ -30,7 +30,21 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-71k#$ew)3g5p-jr*x@p3d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host.strip()] if os.environ.get('ALLOWED_HOSTS') else []
+# ALLOWED_HOSTS configuration
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '')
+if ALLOWED_HOSTS_ENV:
+    # If ALLOWED_HOSTS is set, use it (split by comma for multiple hosts)
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(',') if host.strip()]
+    # If it contains wildcard pattern, allow all .onrender.com subdomains
+    if '*.onrender.com' in ALLOWED_HOSTS:
+        ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host != '*.onrender.com']
+        ALLOWED_HOSTS.append('.onrender.com')  # Django allows subdomains with leading dot
+else:
+    # Default: allow all .onrender.com subdomains in production
+    if not DEBUG:
+        ALLOWED_HOSTS = ['.onrender.com']
+    else:
+        ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
