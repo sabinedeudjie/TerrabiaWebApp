@@ -36,3 +36,4 @@ class Street(models.Model):
         return f"{self.name} ({self.coverage_area.name})"
 
 
+

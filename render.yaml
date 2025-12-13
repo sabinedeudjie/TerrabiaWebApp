@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: terrabia-web
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn myapp.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: terrabia-web.onrender.com,*.onrender.com
+    healthCheckPath: /
+
+databases:
+  - name: terrabia-db
+    databaseName: terrabia_db
+    user: terrabia_user
+    plan: free
