@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.code }} - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Order {{ order.code }}</h1>
+    
+    <div class="row">
+        <div class="col" style="flex: 2;">
+            <!-- Status Timeline -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2 style="margin-bottom: 1rem;">Order Status</h2>
+                <div style="display: flex; justify-content: space-between; position: relative; padding: 1rem 0;">
+                    {% for step, completed in status_timeline %}
+                        <div style="text-align: center; flex: 1;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: {% if completed %}#4CAF50{% else %}#ddd{% endif %}; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem;">
+                                {% if completed %}✓{% else %}{{ forloop.counter }}{% endif %}
+                            </div>
+                            <div style="font-size: 0.875rem; color: {% if completed %}#4CAF50{% else %}var(--text-light){% endif %};">
+                                {{ step }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Order Items -->
+            <div class="card">
+                <h2 style="margin-bottom: 1rem;">Order Items</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                <td>{{ item.unit_price }} {{ item.product.currency }}</td>
+                                <td><strong>{{ item.line_total }} {{ item.product.currency }}</strong></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="col" style="flex: 1;">
+            <div class="card" style="position: sticky; top: 20px;">
+                <h3 style="margin-bottom: 1rem;">Order Summary</h3>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Order Code:</strong> {{ order.code }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Date:</strong> {{ order.created_at|date:"M d, Y" }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Status:</strong> 
+                    <span class="badge badge-{% if order.status == 'pending' %}pending{% elif order.status == 'processing' %}processing{% elif order.status == 'delivered' %}delivered{% elif order.status == 'completed' %}completed{% elif order.status == 'cancelled' %}cancelled{% else %}info{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Payment Method:</strong> 
+                    <span>{{ order.get_payment_method_display }}</span>
+                </div>
+                {% if order.payment_method == 'orange_money' or order.payment_method == 'mtn_money' %}
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(76, 175, 80, 0.1); border-radius: 4px; border: 1px solid rgba(76, 175, 80, 0.3);">
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong style="color: var(--primary-color);">📱 Payment Instructions:</strong>
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Send payment to:</strong>
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: bold; color: var(--primary-color); margin-bottom: 0.75rem;">
+                            {% if order.payment_method == 'orange_money' %}
+                                {{ payment_settings.orange_money_number }}
+                            {% elif order.payment_method == 'mtn_money' %}
+                                {{ payment_settings.mtn_money_number }}
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-light);">
+                            <strong>Amount:</strong> <span style="font-weight: bold; color: var(--text-color);">{{ order.total_amount }} FCFA</span>
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.5rem;">
+                            <strong>Order Code:</strong> <span style="font-weight: bold; color: var(--text-color);">{{ order.code }}</span>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(76, 175, 80, 0.3); font-size: 0.875rem; color: var(--text-light);">
+                            ⚠️ <strong>Important:</strong> Please include your order code ({{ order.code }}) in the payment reference/note when making the payment.
+                        </div>
+                    </div>
+                {% endif %}
+                <hr style="margin: 1rem 0;">
+                <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">
+                    Total: {{ order.total_amount }} FCFA
+                </div>
+                
+                {% if delivery %}
+                    <hr style="margin: 1rem 0;">
+                    <h4 style="margin-bottom: 0.5rem;">Delivery Information</h4>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Delivery Code:</strong> {{ delivery.code }}
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Status:</strong> 
+                        <span class="badge badge-{% if delivery.status == 'pending' %}pending{% elif delivery.status == 'in_progress' %}processing{% elif delivery.status == 'completed' %}delivered{% elif delivery.status == 'cancelled' %}cancelled{% elif delivery.status == 'not_delivered' %}cancelled{% else %}info{% endif %}">
+                            {{ delivery.get_status_display }}
+                        </span>
+                    </div>
+                    {% if delivery.agency %}
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Agency:</strong> {{ delivery.agency.agency_name }}
+                        </div>
+                        {% if delivery.agency.phone_number %}
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>Phone:</strong> <a href="tel:{{ delivery.agency.phone_number }}">{{ delivery.agency.phone_number }}</a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <!-- Allow customer to change delivery status if delivery is in progress, completed, or not delivered -->
+                    {% if delivery.status == 'in_progress' or delivery.status == 'completed' or delivery.status == 'not_delivered' %}
+                        <hr style="margin: 1rem 0;">
+                        <h4 style="margin-bottom: 0.5rem;">Delivery Status</h4>
+                        {% if delivery.customer_confirmed %}
+                            <div style="padding: 0.75rem; background: rgba(76, 175, 80, 0.1); border-radius: 4px; font-size: 0.875rem; color: #4CAF50; margin-bottom: 1rem; border: 1px solid rgba(76, 175, 80, 0.3);">
+                                ✓ You have confirmed this delivery as completed
+                            </div>
+                            <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 1rem;">
+                                You can change the delivery status if needed:
+                            </p>
+                        {% else %}
+                            <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 1rem;">
+                                Has your order been delivered?
+                            </p>
+                        {% endif %}
+                        <form method="post" action="{% url 'orders:confirm_delivery' order.id %}" style="display: flex; gap: 0.5rem; flex-direction: column;">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="confirm" class="btn btn-success" style="width: 100%;">
+                                ✓ Confirm Delivery (Delivered)
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger" style="width: 100%;">
+                                ✗ Mark as Not Delivered
+                            </button>
+                        </form>
+                    {% elif delivery.status == 'pending' %}
+                        <hr style="margin: 1rem 0;">
+                        <div style="padding: 0.75rem; background: rgba(255, 152, 0, 0.1); border-radius: 4px; font-size: 0.875rem; border: 1px solid rgba(255, 152, 0, 0.3); color: #FF9800;">
+                            <strong>Delivery is pending.</strong> Waiting for delivery agency to start the delivery.
+                        </div>
+                    {% endif %}
+                {% endif %}
+                
+                <hr style="margin: 1rem 0;">
+                <div>
+                    <strong>Delivery Address:</strong>
+                    <p style="margin-top: 0.5rem;">{{ order.formatted_delivery_address }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

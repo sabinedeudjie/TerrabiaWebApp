@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Agencies - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="margin-bottom: 1rem;">
+        <a href="{% url 'messaging:farmer_messages' %}" class="btn btn-secondary">← Back to Messages</a>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Delivery Agencies</h1>
+    </div>
+    
+    <!-- Filter by Coverage Area -->
+    <div class="card" style="margin-bottom: 2rem; padding: 1rem;">
+        <form method="get" style="display: flex; gap: 1rem; align-items: center;">
+            <label for="area" style="font-weight: bold;">Filter by Coverage Area:</label>
+            <select name="area" id="area" class="form-control" style="width: 300px;" onchange="this.form.submit()">
+                <option value="">All Areas</option>
+                {% for area in coverage_areas %}
+                    <option value="{{ area.id }}" {% if selected_area == area.id|stringformat:"s" %}selected{% endif %}>
+                        {{ area.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            {% if selected_area %}
+                <a href="{% url 'messaging:farmer_agencies' %}" class="btn btn-secondary">Clear Filter</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    {% if agencies %}
+        <div class="row">
+            {% for agency in agencies %}
+                <div class="col" style="flex: 1; min-width: 300px; margin-bottom: 1.5rem;">
+                    <div class="card" style="height: 100%;">
+                        <div style="padding: 1.5rem;">
+                            <h3 style="margin-bottom: 1rem;">{{ agency.agency_name }}</h3>
+                            
+                            {% if agency.coverage_area %}
+                                <div style="margin-bottom: 0.75rem;">
+                                    <strong>📍 Coverage Area:</strong> {{ agency.coverage_area.name }}
+                                </div>
+                            {% endif %}
+                            
+                            {% if agency.phone_number %}
+                                <div style="margin-bottom: 0.75rem; font-size: 0.875rem;">
+                                    <strong>📞 Phone:</strong> <a href="tel:{{ agency.phone_number }}">{{ agency.phone_number }}</a>
+                                </div>
+                            {% endif %}
+                            
+                            {% if agency.email %}
+                                <div style="margin-bottom: 0.75rem; font-size: 0.875rem;">
+                                    <strong>✉️ Email:</strong> <a href="mailto:{{ agency.email }}">{{ agency.email }}</a>
+                                </div>
+                            {% endif %}
+                            
+                            {% if agency.address %}
+                                <div style="margin-bottom: 0.75rem; font-size: 0.875rem; color: var(--text-light);">
+                                    <strong>📍 Address:</strong> {{ agency.address|truncatewords:10 }}
+                                </div>
+                            {% endif %}
+                            
+                            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                <a href="{% url 'messaging:farmer_start_conversation' agency.id %}" class="btn btn-primary" style="width: 100%;">
+                                    💬 Start Conversation
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🚚</div>
+            <h3>No delivery agencies found</h3>
+            <p>{% if selected_area %}No verified agencies found for the selected area.{% else %}No verified delivery agencies available at the moment.{% endif %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

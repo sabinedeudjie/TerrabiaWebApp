@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery {{ delivery.code }} - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Delivery {{ delivery.code }}</h1>
+    
+    <div class="row">
+        <div class="col" style="flex: 2;">
+            <!-- Order Items -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2 style="margin-bottom: 1rem;">Order Items</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                <td>{{ item.unit_price }} {{ item.product.currency }}</td>
+                                <td><strong>{{ item.line_total }} {{ item.product.currency }}</strong></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Customer Info -->
+            <div class="card">
+                <h2 style="margin-bottom: 1rem;">Customer Information</h2>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Name:</strong> {{ order.customer.full_name }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Phone:</strong> {{ order.customer.phone }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Delivery Address:</strong>
+                    <p style="margin-top: 0.5rem;">{{ order.formatted_delivery_address }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col" style="flex: 1;">
+            <div class="card" style="position: sticky; top: 20px;">
+                <h3 style="margin-bottom: 1rem;">Update Status</h3>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="status">Delivery Status</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="pending" {% if delivery.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in_progress" {% if delivery.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="completed" {% if delivery.status == 'completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Update Status</button>
+                </form>
+                
+                <hr style="margin: 1.5rem 0;">
+                
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Order Code:</strong> {{ order.code }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Current Status:</strong> 
+                    <span class="badge badge-{% if delivery.status == 'pending' %}pending{% elif delivery.status == 'in_progress' %}processing{% elif delivery.status == 'completed' %}delivered{% elif delivery.status == 'cancelled' %}cancelled{% elif delivery.status == 'not_delivered' %}cancelled{% else %}info{% endif %}">
+                        {{ delivery.get_status_display }}
+                    </span>
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Delivery Fee:</strong> {{ delivery.fee }} FCFA
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Order Total:</strong> {{ order.total_amount }} FCFA
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

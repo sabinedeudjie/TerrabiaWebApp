@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Product - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div class="card">
+        <h2 style="margin-bottom: 2rem;">{{ action }} Product</h2>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="name">Product Name</label>
+                <input type="text" id="name" name="name" class="form-control" value="{% if product %}{{ product.name }}{% endif %}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="image">Product Image</label>
+                <input type="file" id="image" name="image" class="form-control" accept="image/*">
+                {% if product and product.image %}
+                    <div style="margin-top: 0.5rem;">
+                        <small>Current image:</small><br>
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width: 200px; max-height: 200px; margin-top: 0.5rem; border-radius: 4px;">
+                    </div>
+                {% endif %}
+                <small style="color: var(--text-light);">Upload an image of your product (optional but recommended)</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="3">{% if product %}{{ product.description }}{% endif %}</textarea>
+            </div>
+            
+            <div class="row">
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label" for="category">Category <span style="color: red;">*</span></label>
+                        <select id="category" name="category" class="form-control" required>
+                            <option value="">Select category (required)</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if product and product.category.id == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label" for="price">Price</label>
+                        <input type="number" id="price" name="price" class="form-control" step="0.01" value="{% if product %}{{ product.price }}{% endif %}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label" for="currency">Currency</label>
+                        <select id="currency" name="currency" class="form-control">
+                            <option value="FCFA" {% if not product or product.currency == 'FCFA' %}selected{% endif %}>FCFA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label" for="unit">Unit</label>
+                        <input type="text" id="unit" name="unit" class="form-control" value="{% if product %}{{ product.unit }}{% else %}kg{% endif %}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label" for="stock_quantity">Stock Quantity</label>
+                        <input type="number" id="stock_quantity" name="stock_quantity" class="form-control" step="0.01" value="{% if product %}{{ product.stock_quantity }}{% endif %}" required>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label" for="stock_unit">Stock Unit</label>
+                        <input type="text" id="stock_unit" name="stock_unit" class="form-control" value="{% if product %}{{ product.stock_unit }}{% else %}kg{% endif %}" required>
+                    </div>
+                </div>
+            </div>
+            
+            {% if product %}
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}>
+                        <span>Active (product visible to customers)</span>
+                    </label>
+                </div>
+            {% endif %}
+            
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'farmer:products' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% endblock %}
+

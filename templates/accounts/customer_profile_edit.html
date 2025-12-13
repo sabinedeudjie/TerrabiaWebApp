@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div class="card">
+        <h2 style="margin-bottom: 2rem;">Edit Profile</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" class="form-control" value="{{ profile.full_name }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control" value="{{ profile.user.email }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" class="form-control" value="{{ profile.phone }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="zone">Zone</label>
+                <select id="zone" name="zone" class="form-control" onchange="loadStreets(this.value)">
+                    <option value="">Select a zone</option>
+                    {% for area in coverage_areas %}
+                        <option value="{{ area.id }}" {% if profile.street and profile.street.coverage_area.id == area.id %}selected{% endif %}>
+                            {{ area.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="street">Street/Quartier</label>
+                <select id="street" name="street" class="form-control">
+                    <option value="">Select a zone first</option>
+                    {% if profile.street %}
+                        <option value="{{ profile.street.id }}" selected>{{ profile.street.name }}</option>
+                    {% endif %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="address_details">Address Details</label>
+                <textarea id="address_details" name="address_details" class="form-control" rows="2" placeholder="House number, building, landmarks, etc. (optional)">{{ profile.address_details }}</textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'customer:profile' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load streets when zone is selected
+function loadStreets(zoneId) {
+    const streetSelect = document.getElementById('street');
+    if (!streetSelect) return;
+    
+    streetSelect.innerHTML = '<option value="">Loading...</option>';
+    
+    if (!zoneId) {
+        streetSelect.innerHTML = '<option value="">Select a zone first</option>';
+        return;
+    }
+    
+    fetch(`/api/locations/streets/?coverage_area=${zoneId}`)
+        .then(response => response.json())
+        .then(data => {
+            streetSelect.innerHTML = '<option value="">Select a street</option>';
+            if (data.streets) {
+                data.streets.forEach(street => {
+                    const option = document.createElement('option');
+                    option.value = street.id;
+                    option.textContent = street.name;
+                    streetSelect.appendChild(option);
+                });
+            }
+            // If profile has a street, select it
+            {% if profile.street %}
+                const currentStreetId = {{ profile.street.id }};
+                if (streetSelect.querySelector(`option[value="${currentStreetId}"]`)) {
+                    streetSelect.value = currentStreetId;
+                }
+            {% endif %}
+        })
+        .catch(error => {
+            console.error('Error loading streets:', error);
+            streetSelect.innerHTML = '<option value="">Error loading</option>';
+        });
+}
+
+// Load streets on page load if zone is already selected
+document.addEventListener('DOMContentLoaded', function() {
+    const zoneSelect = document.getElementById('zone');
+    if (zoneSelect && zoneSelect.value) {
+        loadStreets(zoneSelect.value);
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">User Management</h1>
+    
+    <!-- Role Filter -->
+    <div class="filter-group">
+        <a href="{% url 'platform_admin:users' %}" class="btn {% if not role_filter %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+        <a href="{% url 'platform_admin:users' %}?role=customer" class="btn {% if role_filter == 'customer' %}btn-primary{% else %}btn-secondary{% endif %}">Customers</a>
+        <a href="{% url 'platform_admin:users' %}?role=farmer" class="btn {% if role_filter == 'farmer' %}btn-primary{% else %}btn-secondary{% endif %}">Farmers</a>
+        <a href="{% url 'platform_admin:users' %}?role=delivery_agency" class="btn {% if role_filter == 'delivery_agency' %}btn-primary{% else %}btn-secondary{% endif %}">Agencies</a>
+    </div>
+    
+    {% if users %}
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name/Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Join Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                <strong>
+                                    {% if user.role == 'customer' and user.customer_profile %}
+                                        {{ user.customer_profile.full_name }}
+                                    {% elif user.role == 'farmer' and user.farmer_profile %}
+                                        {{ user.farmer_profile.farm_name }}
+                                    {% elif user.role == 'delivery_agency' and user.agency_profile %}
+                                        {{ user.agency_profile.name }}
+                                    {% else %}
+                                        {{ user.username }}
+                                    {% endif %}
+                                </strong>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge badge-info">{{ user.get_role_display }}</span>
+                            </td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <h3>No users found</h3>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

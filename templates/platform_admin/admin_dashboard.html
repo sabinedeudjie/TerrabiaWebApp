@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Admin Dashboard</h1>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_customers }}</div>
+            <div class="stat-label">Customers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_farmers }}</div>
+            <div class="stat-label">Farmers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_agencies }}</div>
+            <div class="stat-label">Agencies</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value orders">{{ total_orders }}</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value sales">{{ total_revenue|floatformat:0 }} FCFA</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 class="card-header" style="margin: 0;">Recent Orders</h2>
+            <a href="{% url 'platform_admin:payments' %}" class="btn btn-primary btn-sm">Manage Payments</a>
+        </div>
+        {% if recent_orders %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order Code</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                        <tr>
+                            <td>{{ order.code }}</td>
+                            <td>{{ order.customer.full_name }}</td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge badge-{% if order.status == 'pending' %}pending{% elif order.status == 'processing' %}processing{% elif order.status == 'delivered' %}delivered{% elif order.status == 'completed' %}completed{% elif order.status == 'cancelled' %}cancelled{% else %}info{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ order.total_amount }} FCFA</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; color: var(--text-light); padding: 2rem;">No orders yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

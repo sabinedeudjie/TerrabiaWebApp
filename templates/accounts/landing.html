@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Terrabia - Connecting Farmers and Customers{% endblock %}
+
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="hero-section" style="text-align: center; padding: 4rem 0;">
+        <div style="margin-bottom: 2rem;">
+            <img src="{% static 'images/logo.png' %}" alt="Terrabia Logo" style="height: 120px; width: auto; margin-bottom: 1rem;">
+        </div>
+        <h1 style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary-color);">Welcome to Terrabia</h1>
+        <p style="font-size: 1.25rem; color: var(--text-light); margin-bottom: 2rem;">
+            Connecting farmers, customers, and delivery agencies in one platform
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'accounts:join' %}" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
+                Get Started
+            </a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-secondary" style="font-size: 1.125rem; padding: 1rem 2rem;">
+                Sign In
+            </a>
+        </div>
+    </div>
+
+    <div class="features-section" style="margin-top: 4rem;">
+        <div class="row">
+            <div class="col-3">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">👨‍🌾</div>
+                    <h3>For Farmers</h3>
+                    <p>Manage your products, track orders, and grow your business</p>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🛒</div>
+                    <h3>For Customers</h3>
+                    <p>Browse fresh products, order easily, and track deliveries</p>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🚚</div>
+                    <h3>For Agencies</h3>
+                    <p>Manage deliveries efficiently and connect with farmers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

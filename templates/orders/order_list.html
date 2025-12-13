@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">My Orders</h1>
+    
+    {% if orders %}
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order Code</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><strong>{{ order.code }}</strong></td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge badge-{% if order.status == 'pending' %}pending{% elif order.status == 'processing' %}processing{% elif order.status == 'delivered' %}delivered{% elif order.status == 'completed' %}completed{% elif order.status == 'cancelled' %}cancelled{% else %}info{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ order.items.count }} item(s)</td>
+                            <td><strong>{{ order.total_amount }} FCFA</strong></td>
+                            <td>
+                                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-primary btn-sm">Track</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h3>No orders yet</h3>
+            <p><a href="{% url 'marketplace:product_list' %}" class="btn btn-primary">Start Shopping</a></p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

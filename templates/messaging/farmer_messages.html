@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Messages - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Messages</h1>
+        <a href="{% url 'messaging:farmer_agencies' %}" class="btn btn-primary">+ Start New Conversation</a>
+    </div>
+    
+    {% if threads %}
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Conversation</th>
+                        <th>Last Message</th>
+                        <th>Unread</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for thread_data in threads %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>
+                                        {% if thread_data.other_participant %}
+                                            {% if thread_data.other_participant.role == 'delivery_agency' %}
+                                                {{ thread_data.other_participant.agency_profile.agency_name }}
+                                            {% else %}
+                                                {{ thread_data.other_participant.username }}
+                                            {% endif %}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </strong>
+                                </div>
+                                {% if thread_data.thread.order %}
+                                    <small style="color: var(--text-light);">Order: {{ thread_data.thread.order.code }}</small>
+                                {% endif %}
+                                {% if thread_data.thread.subject %}
+                                    <div style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.25rem;">
+                                        {{ thread_data.thread.subject }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if thread_data.last_message %}
+                                    <div style="font-size: 0.875rem;">
+                                        {{ thread_data.last_message.content|truncatewords:10 }}
+                                    </div>
+                                    <small style="color: var(--text-light);">
+                                        {{ thread_data.last_message.created_at|timesince }} ago
+                                    </small>
+                                {% else %}
+                                    <span style="color: var(--text-light);">No messages</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if thread_data.unread_count > 0 %}
+                                    <span class="badge badge-primary">{{ thread_data.unread_count }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-light);">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'messaging:farmer_thread' thread_data.thread.id %}" class="btn btn-primary btn-sm">
+                                    Open
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <h3>No conversations yet</h3>
+            <p>Start a conversation with a delivery agency.</p>
+            <a href="{% url 'messaging:farmer_agencies' %}" class="btn btn-primary" style="margin-top: 1rem;">Browse Agencies</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

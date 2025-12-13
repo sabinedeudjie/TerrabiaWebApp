@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Delivery Agency - Order {{ order.code }} - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'farmer:order_detail' order.id %}" class="btn btn-secondary">← Back to Order</a>
+    </div>
+    
+    <div class="card">
+        <h2 style="margin-bottom: 1rem;">Select Delivery Agency for Order {{ order.code }}</h2>
+        
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-light); border-radius: 4px;">
+            <div style="margin-bottom: 0.5rem;">
+                <strong>Customer:</strong> {{ order.customer.full_name }}
+            </div>
+            <div style="margin-bottom: 0.5rem;">
+                <strong>Delivery Address:</strong> {{ order.formatted_delivery_address }}
+            </div>
+            <div>
+                <strong>Coverage Area:</strong> {{ order.delivery_coverage_area.name }}
+            </div>
+        </div>
+        
+        {% if available_agencies %}
+            <form method="post" action="{% url 'farmer:assign_delivery_agency' order.id %}">
+                {% csrf_token %}
+                
+                <h3 style="margin-bottom: 1rem;">Available Delivery Agencies</h3>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+                    Select a delivery agency that covers {{ order.delivery_coverage_area.name }}:
+                </p>
+                
+                <div style="display: grid; gap: 1rem; margin-bottom: 1.5rem;">
+                    {% for agency in available_agencies %}
+                        <label style="display: block; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.2s; {% if forloop.first %}border-color: var(--primary-color);{% endif %}" 
+                               onmouseover="this.style.borderColor='var(--primary-color)'" 
+                               onmouseout="this.style.borderColor='var(--border-color)'">
+                            <input type="radio" name="agency_id" value="{{ agency.id }}" {% if forloop.first %}checked{% endif %} 
+                                   style="margin-right: 0.75rem; cursor: pointer;" required>
+                            <div style="display: inline-block; width: calc(100% - 2rem);">
+                                <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                                    {{ agency.agency_name }}
+                                </div>
+                                {% if agency.phone_number %}
+                                    <div style="margin-bottom: 0.25rem; font-size: 0.9rem; color: var(--text-light);">
+                                        📞 <a href="tel:{{ agency.phone_number }}">{{ agency.phone_number }}</a>
+                                    </div>
+                                {% endif %}
+                                {% if agency.email %}
+                                    <div style="margin-bottom: 0.25rem; font-size: 0.9rem; color: var(--text-light);">
+                                        ✉️ <a href="mailto:{{ agency.email }}">{{ agency.email }}</a>
+                                    </div>
+                                {% endif %}
+                                <div style="font-size: 0.875rem; color: var(--text-light);">
+                                    📍 Coverage: {{ agency.coverage_area.name }}
+                                </div>
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary">Assign Delivery Agency</button>
+                    <a href="{% url 'farmer:order_detail' order.id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">🚚</div>
+                <h3>No delivery agencies available</h3>
+                <p>No verified delivery agencies found for {{ order.delivery_coverage_area.name }}.</p>
+                <a href="{% url 'farmer:order_detail' order.id %}" class="btn btn-secondary" style="margin-top: 1rem;">Back to Order</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+

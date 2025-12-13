@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Checkout</h1>
+    
+    <div class="row">
+        <div class="col" style="flex: 2;">
+            <div class="card">
+                <h2 style="margin-bottom: 1.5rem;">Order Summary</h2>
+                {% for item in cart_items %}
+                    <div style="display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border-color);">
+                        <div>
+                            <strong>{{ item.product.name }}</strong>
+                            <div style="color: var(--text-light); font-size: 0.875rem;">
+                                {{ item.quantity }} {{ item.product.unit }} × {{ item.product.price }} {{ item.product.currency }}
+                            </div>
+                        </div>
+                        <div style="font-weight: bold;">
+                            {{ item.total_price }} {{ item.product.currency }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="card" style="margin-top: 1.5rem;">
+                <h2 style="margin-bottom: 1.5rem;">Delivery Information</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="delivery_coverage_area">Delivery Coverage Area <span style="color: red;">*</span></label>
+                        <select id="delivery_coverage_area" name="delivery_coverage_area" class="form-control" required onchange="loadDeliveryStreets(this.value)">
+                            <option value="">Select a coverage area</option>
+                            {% for area in coverage_areas %}
+                                <option value="{{ area.id }}">{{ area.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small style="color: var(--text-light);">Select the area where you want your order delivered</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="delivery_street">Street/Quartier <span style="color: red;">*</span></label>
+                        <select id="delivery_street" name="delivery_street" class="form-control" required>
+                            <option value="">Select a coverage area first</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="delivery_address_details">Address Details</label>
+                        <textarea id="delivery_address_details" name="delivery_address_details" class="form-control" rows="2" placeholder="House number, building, landmarks, etc. (optional)">{{ customer_address_details }}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="payment_method">Payment Method <span style="color: red;">*</span></label>
+                        <select id="payment_method" name="payment_method" class="form-control" required onchange="showPaymentNumber(this.value)">
+                            <option value="">Select payment method</option>
+                            <option value="orange_money">Orange Money</option>
+                            <option value="mtn_money">MTN Mobile Money</option>
+                            <option value="bank_card">Bank Card</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Payment Number Display -->
+                    <div id="payment_number_display" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(76, 175, 80, 0.1); border-radius: 4px; border: 1px solid rgba(76, 175, 80, 0.3);">
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong style="color: var(--primary-color);">📱 Payment Instructions:</strong>
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Send payment to:</strong>
+                        </div>
+                        <div id="payment_number" style="font-size: 1.25rem; font-weight: bold; color: var(--primary-color); margin-bottom: 0.75rem;">
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-light);">
+                            <strong>Amount:</strong> <span id="payment_amount" style="font-weight: bold; color: var(--text-color);">{{ total }} FCFA</span>
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.5rem;">
+                            <strong>Order Code:</strong> <span id="order_code_placeholder" style="font-weight: bold; color: var(--text-color);">Will be generated after order placement</span>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(76, 175, 80, 0.3); font-size: 0.875rem; color: var(--text-light);">
+                            ⚠️ <strong>Important:</strong> Please include your order code in the payment reference/note when making the payment.
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.125rem; padding: 1rem;">
+                        Pay {{ total }} FCFA
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col" style="flex: 1;">
+            <div class="card" style="position: sticky; top: 20px;">
+                <h3 style="margin-bottom: 1rem;">Order Total</h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Subtotal:</span>
+                    <span>{{ subtotal }} FCFA</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Delivery Fee:</span>
+                    <span>{{ delivery_fee }} FCFA</span>
+                </div>
+                <hr style="margin: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: bold;">
+                    <span>Total:</span>
+                    <span style="color: var(--primary-color);">{{ total }} FCFA</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Payment numbers from server
+const paymentNumbers = {
+    orange_money: '{{ payment_settings.orange_money_number|default:"+237 6XX XXX XXX" }}',
+    mtn_money: '{{ payment_settings.mtn_money_number|default:"+237 6XX XXX XXX" }}'
+};
+
+// Load streets for delivery address
+function loadDeliveryStreets(coverageAreaId) {
+    const streetSelect = document.getElementById('delivery_street');
+    if (!streetSelect) return;
+    
+    streetSelect.innerHTML = '<option value="">Chargement...</option>';
+    
+    if (!coverageAreaId) {
+        streetSelect.innerHTML = '<option value="">Sélectionnez d\'abord une zone</option>';
+        return;
+    }
+    
+    fetch(`/api/locations/streets/?coverage_area=${coverageAreaId}`)
+        .then(response => response.json())
+        .then(data => {
+            streetSelect.innerHTML = '<option value="">Sélectionnez un quartier</option>';
+            if (data.streets) {
+                data.streets.forEach(street => {
+                    const option = document.createElement('option');
+                    option.value = street.id;
+                    option.textContent = street.name;
+                    streetSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading streets:', error);
+            streetSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+        });
+}
+
+// Show payment number when payment method is selected
+function showPaymentNumber(paymentMethod) {
+    const displayDiv = document.getElementById('payment_number_display');
+    const numberDiv = document.getElementById('payment_number');
+    
+    if (paymentMethod === 'orange_money' || paymentMethod === 'mtn_money') {
+        displayDiv.style.display = 'block';
+        numberDiv.textContent = paymentNumbers[paymentMethod];
+    } else if (paymentMethod === 'bank_card') {
+        displayDiv.style.display = 'none';
+    } else {
+        displayDiv.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
+

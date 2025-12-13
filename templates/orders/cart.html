@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Shopping Cart</h1>
+    
+    {% if cart_items %}
+        <div class="row">
+            <div class="col" style="flex: 2;">
+                {% for item in cart_items %}
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <h3>{{ item.product.name }}</h3>
+                                <p style="color: var(--text-light); margin: 0.5rem 0;">
+                                    {{ item.product.price }} {{ item.product.currency }}/{{ item.product.unit }}
+                                </p>
+                                <p style="color: var(--text-light);">
+                                    Farmer: {{ item.product.farmer.farm_name }}
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="margin-bottom: 1rem;">
+                                    <label>Quantity:</label>
+                                    <input type="number" value="{{ item.quantity }}" min="1" 
+                                           onchange="updateCartItem({{ item.id }}, this.value)" 
+                                           style="width: 80px; padding: 0.5rem; margin-left: 0.5rem;">
+                                </div>
+                                <div style="font-size: 1.25rem; font-weight: bold; color: var(--primary-color);">
+                                    {{ item.total_price }} {{ item.product.currency }}
+                                </div>
+                                <button onclick="removeCartItem({{ item.id }})" class="btn btn-danger btn-sm" style="margin-top: 0.5rem;">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="col" style="flex: 1;">
+                <div class="card" style="position: sticky; top: 20px;">
+                    <h3 style="margin-bottom: 1rem;">Order Summary</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Subtotal:</span>
+                        <span>{{ subtotal }} FCFA</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Delivery Fee:</span>
+                        <span>{{ delivery_fee }} FCFA</span>
+                    </div>
+                    <hr style="margin: 1rem 0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; margin-bottom: 1.5rem;">
+                        <span>Total:</span>
+                        <span style="color: var(--primary-color);">{{ total }} FCFA</span>
+                    </div>
+                    <a href="{% url 'orders:checkout' %}" class="btn btn-primary" style="width: 100%;">
+                        Proceed to Checkout
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🛒</div>
+            <h3>Your cart is empty</h3>
+            <p><a href="{% url 'marketplace:product_list' %}" class="btn btn-primary">Browse Products</a></p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

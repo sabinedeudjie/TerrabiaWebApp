@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Details - Order {{ order.code }} - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'platform_admin:payments' %}" class="btn btn-secondary">← Back to Payments</a>
+    </div>
+    
+    <h1 style="margin-bottom: 2rem;">Payment Details - Order {{ order.code }}</h1>
+    
+    <div class="row">
+        <div class="col" style="flex: 2;">
+            <!-- Order Information -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2 style="margin-bottom: 1rem;">Order Information</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <strong>Order Code:</strong> {{ order.code }}
+                    </div>
+                    <div>
+                        <strong>Customer:</strong> {{ order.customer.full_name }}
+                    </div>
+                    <div>
+                        <strong>Date:</strong> {{ order.created_at|date:"M d, Y H:i" }}
+                    </div>
+                    <div>
+                        <strong>Payment Method:</strong> {{ order.get_payment_method_display }}
+                    </div>
+                    <div>
+                        <strong>Payment Status:</strong> 
+                        <span class="badge badge-{% if order.payment_status == 'received' %}success{% elif order.payment_status == 'pending' %}pending{% elif order.payment_status == 'failed' %}danger{% else %}info{% endif %}">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </div>
+                    {% if order.payment_confirmed_at %}
+                        <div>
+                            <strong>Confirmed At:</strong> {{ order.payment_confirmed_at|date:"M d, Y H:i" }}
+                        </div>
+                        <div>
+                            <strong>Confirmed By:</strong> {{ order.payment_confirmed_by.username|default:"N/A" }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Farmer Payments Breakdown -->
+            <div class="card">
+                <h2 style="margin-bottom: 1rem;">Farmer Payments Breakdown</h2>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Farmer</th>
+                            <th>Product</th>
+                            <th>Line Total</th>
+                            <th>Commission</th>
+                            <th>Farmer Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item_data in farmer_amounts %}
+                            <tr>
+                                <td>{{ item_data.item.farmer.farm_name }}</td>
+                                <td>{{ item_data.item.product.name }} ({{ item_data.item.quantity }} {{ item_data.item.product.unit }})</td>
+                                <td>{{ item_data.line_total }} FCFA</td>
+                                <td style="color: var(--status-cancelled);">-{{ item_data.commission }} FCFA</td>
+                                <td style="font-weight: bold; color: var(--primary-color);">{{ item_data.farmer_amount }} FCFA</td>
+                                <td>
+                                    {% if item_data.payment %}
+                                        <span class="badge badge-{% if item_data.payment.status == 'sent' %}processing{% elif item_data.payment.status == 'received' %}success{% elif item_data.payment.status == 'cancelled' %}cancelled{% else %}pending{% endif %}">
+                                            {{ item_data.payment.get_status_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-pending">Not Distributed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold; background: var(--bg-light);">
+                            <td colspan="2"><strong>Totals:</strong></td>
+                            <td>{{ total_order }} FCFA</td>
+                            <td style="color: var(--status-cancelled);">-{{ total_commissions }} FCFA</td>
+                            <td style="color: var(--primary-color);">{{ total_farmer_payments }} FCFA</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <!-- Distribute Payments Form -->
+            {% if order.payment_status == 'received' %}
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h2 style="margin-bottom: 1rem;">Distribute Payments to Farmers</h2>
+                    
+                    <form method="post" action="{% url 'platform_admin:payment_distribute' order.id %}">
+                        {% csrf_token %}
+                        
+                        {% for item_data in farmer_amounts %}
+                            {% if not item_data.payment or item_data.payment.status == 'pending' %}
+                                <div style="padding: 1rem; margin-bottom: 1rem; background: var(--bg-light); border-radius: 4px;">
+                                    <h4 style="margin-bottom: 0.5rem;">{{ item_data.item.farmer.farm_name }} - {{ item_data.item.product.name }}</h4>
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <strong>Amount to Pay:</strong> <span style="color: var(--primary-color); font-size: 1.125rem;">{{ item_data.farmer_amount }} FCFA</span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label" for="payment_method_{{ item_data.item.id }}">Payment Method</label>
+                                        <select id="payment_method_{{ item_data.item.id }}" name="payment_method_{{ item_data.item.id }}" class="form-control" required>
+                                            <option value="">Select method</option>
+                                            <option value="orange_money">Orange Money</option>
+                                            <option value="mtn_money">MTN Mobile Money</option>
+                                            <option value="bank_transfer">Bank Transfer</option>
+                                            <option value="cash">Cash</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label" for="payment_reference_{{ item_data.item.id }}">Transaction Reference</label>
+                                        <input type="text" id="payment_reference_{{ item_data.item.id }}" name="payment_reference_{{ item_data.item.id }}" class="form-control" placeholder="Transaction ID or reference number">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label" for="notes_{{ item_data.item.id }}">Notes (Optional)</label>
+                                        <textarea id="notes_{{ item_data.item.id }}" name="notes_{{ item_data.item.id }}" class="form-control" rows="2" placeholder="Additional notes about this payment"></textarea>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div style="padding: 1rem; margin-bottom: 1rem; background: rgba(76, 175, 80, 0.1); border-radius: 4px; border: 1px solid rgba(76, 175, 80, 0.3);">
+                                    <h4 style="margin-bottom: 0.5rem;">{{ item_data.item.farmer.farm_name }} - {{ item_data.item.product.name }}</h4>
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <strong>Status:</strong> 
+                                        <span class="badge badge-{% if item_data.payment.status == 'sent' %}processing{% elif item_data.payment.status == 'received' %}success{% else %}pending{% endif %}">
+                                            {{ item_data.payment.get_status_display }}
+                                        </span>
+                                    </div>
+                                    {% if item_data.payment.payment_method %}
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <strong>Method:</strong> {{ item_data.payment.payment_method|title }}
+                                        </div>
+                                    {% endif %}
+                                    {% if item_data.payment.payment_reference %}
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <strong>Reference:</strong> {{ item_data.payment.payment_reference }}
+                                        </div>
+                                    {% endif %}
+                                    {% if item_data.payment.sent_at %}
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <strong>Sent At:</strong> {{ item_data.payment.sent_at|date:"M d, Y H:i" }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if farmer_amounts %}
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                                Distribute Payments
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+            {% else %}
+                <div class="card" style="margin-top: 1.5rem; background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3);">
+                    <p style="margin: 0; color: var(--status-pending);">
+                        <strong>⚠️ Customer payment must be confirmed first before distributing to farmers.</strong>
+                    </p>
+                    <form method="post" action="{% url 'platform_admin:payment_confirm' order.id %}" style="margin-top: 1rem;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Confirm Customer Payment Received</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="col" style="flex: 1;">
+            <div class="card" style="position: sticky; top: 20px;">
+                <h3 style="margin-bottom: 1rem;">Summary</h3>
+                
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Order Total:</span>
+                        <strong>{{ total_order }} FCFA</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--status-cancelled);">
+                        <span>Platform Commission:</span>
+                        <strong>-{{ total_commissions }} FCFA</strong>
+                    </div>
+                    <hr style="margin: 1rem 0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; color: var(--primary-color);">
+                        <span>Total to Farmers:</span>
+                        <span>{{ total_farmer_payments }} FCFA</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <div style="font-size: 0.875rem; color: var(--text-light);">
+                        <strong>Commission Settings:</strong><br>
+                        Type: {{ commission_settings.get_commission_type_display }}<br>
+                        {% if commission_settings.commission_type == 'percentage' %}
+                            Rate: {{ commission_settings.commission_percentage }}%
+                        {% elif commission_settings.commission_type == 'fixed' %}
+                            Amount: {{ commission_settings.commission_fixed_amount }} FCFA per order
+                        {% else %}
+                            No commission
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'platform_admin:commission_settings' %}" class="btn btn-secondary btn-sm" style="margin-top: 0.5rem; width: 100%;">Edit Commission Settings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

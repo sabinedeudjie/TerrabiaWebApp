@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Agencies - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Delivery Agencies</h1>
+        <a href="{% url 'platform_admin:agency_new' %}" class="btn btn-primary">+ Create Agency</a>
+    </div>
+    
+    {% if agencies %}
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Zones de Couverture</th>
+                        <th>License</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agency in agencies %}
+                        <tr>
+                            <td><strong>{{ agency.agency_name }}</strong></td>
+                            <td>{{ agency.email }}</td>
+                            <td>{{ agency.phone_number|default:"-" }}</td>
+                            <td>
+                                {% if agency.coverage_area %}
+                                    <span class="badge badge-info">{{ agency.coverage_area.name }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-light);">Aucune zone</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ agency.license_number }}</td>
+                            <td>
+                                <span class="badge badge-{% if agency.status == 'verified' %}success{% elif agency.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                    {{ agency.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    {% if agency.status == 'pending' %}
+                                        <a href="{% url 'platform_admin:agency_verify' agency.id %}" class="btn btn-success btn-sm">Verify</a>
+                                        <a href="{% url 'platform_admin:agency_reject' agency.id %}" class="btn btn-danger btn-sm">Reject</a>
+                                    {% endif %}
+                                    <a href="{% url 'platform_admin:agency_resend_credentials' agency.id %}" class="btn btn-secondary btn-sm">Resend Credentials</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🚚</div>
+            <h3>No agencies yet</h3>
+            <p><a href="{% url 'platform_admin:agency_new' %}" class="btn btn-primary">Create First Agency</a></p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

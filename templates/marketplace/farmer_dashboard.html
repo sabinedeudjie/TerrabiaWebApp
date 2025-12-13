@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Farmer Dashboard - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Farmer Dashboard</h1>
+    
+    <!-- KPIs -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value sales">{{ monthly_sales|floatformat:0 }} FCFA</div>
+            <div class="stat-label">Monthly Sales</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value orders">{{ active_orders }}</div>
+            <div class="stat-label">Active Orders</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value in-stock">{{ products_in_stock }}</div>
+            <div class="stat-label">Products in Stock</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value out-of-stock">{{ out_of_stock }}</div>
+            <div class="stat-label">Out of Stock</div>
+        </div>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="card">
+        <h2 class="card-header">Recent Orders</h2>
+        {% if recent_orders %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order Code</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                        <tr>
+                            <td>{{ order.code }}</td>
+                            <td>{{ order.customer.full_name }}</td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge badge-{% if order.status == 'pending' %}pending{% elif order.status == 'processing' %}processing{% elif order.status == 'delivered' %}delivered{% elif order.status == 'completed' %}completed{% elif order.status == 'cancelled' %}cancelled{% else %}info{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ order.total_amount }} FCFA</td>
+                            <td>
+                                <a href="{% url 'farmer:order_detail' order.id %}" class="btn btn-primary btn-sm">View</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; color: var(--text-light); padding: 2rem;">No orders yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

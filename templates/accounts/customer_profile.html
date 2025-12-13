@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <h1 style="margin-bottom: 2rem;">My Profile</h1>
+    
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem;">Profile Information</h2>
+        
+        <div style="margin-bottom: 1rem;">
+            <strong>Full Name:</strong> {{ profile.full_name }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Email:</strong> {{ profile.user.email }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Phone:</strong> {{ profile.phone }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Address:</strong> {{ profile.full_address|default:"Not provided" }}
+        </div>
+        
+        <a href="{% url 'customer:profile_edit' %}" class="btn btn-primary">Edit Profile</a>
+        <a href="{% url 'customer:change_password' %}" class="btn btn-secondary" style="margin-left: 0.5rem;">Change Password</a>
+    </div>
+</div>
+{% endblock %}
+

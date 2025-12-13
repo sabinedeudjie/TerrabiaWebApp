@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <h1 style="margin-bottom: 2rem;">My Profile</h1>
+    
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem;">Farm Information</h2>
+        
+        <div style="margin-bottom: 1rem;">
+            <strong>Farm Name:</strong> {{ profile.farm_name }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Contact Person:</strong> {{ profile.contact_person }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Email:</strong> {{ profile.user.email }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Phone:</strong> {{ profile.phone }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Address:</strong> {{ profile.full_address|default:"Not provided" }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Member Since:</strong> {{ profile.created_at|date:"M d, Y" }}
+        </div>
+        
+        <a href="{% url 'farmer:profile_edit' %}" class="btn btn-primary">Edit Profile</a>
+        <a href="{% url 'farmer:change_password' %}" class="btn btn-secondary" style="margin-left: 0.5rem;">Change Password</a>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">My Orders</h1>
+    
+    {% if orders_data %}
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order Code</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Delivery</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order_data in orders_data %}
+                        {% with order=order_data.order %}
+                        <tr>
+                            <td><strong>{{ order.code }}</strong></td>
+                            <td>{{ order.customer.full_name }}</td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>{{ order.formatted_delivery_address|truncatewords:5 }}</td>
+                            <td>
+                                <span class="badge badge-{% if order.status == 'pending' %}pending{% elif order.status == 'processing' %}processing{% elif order.status == 'delivered' %}delivered{% elif order.status == 'completed' %}completed{% elif order.status == 'cancelled' %}cancelled{% else %}info{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if order_data.has_delivery_agency %}
+                                    <span class="badge badge-success" title="{{ order_data.delivery.agency.agency_name }}">
+                                        ✓ Assigned
+                                    </span>
+                                {% elif order.delivery_coverage_area %}
+                                    <span class="badge badge-warning">Not Assigned</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.total_amount }} FCFA</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <a href="{% url 'farmer:order_detail' order.id %}" class="btn btn-primary btn-sm">View</a>
+                                    {% if not order_data.has_delivery_agency and order.delivery_coverage_area %}
+                                        <a href="{% url 'farmer:select_delivery_agency' order.id %}" class="btn btn-success btn-sm" title="Select Delivery Service">
+                                            🚚 Select Delivery
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h3>No orders yet</h3>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.code }} - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Order {{ order.code }}</h1>
+    
+    <div class="row">
+        <div class="col" style="flex: 2;">
+            <!-- Customer Info -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2 style="margin-bottom: 1rem;">Customer Information</h2>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Name:</strong> {{ order.customer.full_name }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Phone:</strong> {{ order.customer.phone }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Delivery Address:</strong>
+                    <p style="margin-top: 0.5rem;">{{ order.formatted_delivery_address }}</p>
+                </div>
+            </div>
+            
+            <!-- Order Items (from this farmer) -->
+            <div class="card">
+                <h2 style="margin-bottom: 1rem;">Order Items</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                <td>{{ item.unit_price }} {{ item.product.currency }}</td>
+                                <td><strong>{{ item.line_total }} {{ item.product.currency }}</strong></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="col" style="flex: 1;">
+            <div class="card" style="position: sticky; top: 20px;">
+                <h3 style="margin-bottom: 1rem;">Order Summary</h3>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Order Code:</strong> {{ order.code }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Date:</strong> {{ order.created_at|date:"M d, Y" }}
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <strong>Status:</strong> 
+                    <span class="badge badge-{% if order.status == 'pending' %}pending{% elif order.status == 'processing' %}processing{% elif order.status == 'delivered' %}delivered{% elif order.status == 'completed' %}completed{% elif order.status == 'cancelled' %}cancelled{% else %}info{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                    {% if order.status == 'completed' %}
+                        <small style="display: block; margin-top: 0.25rem; color: var(--text-light); font-size: 0.75rem;">
+                            All farmers have received payment
+                        </small>
+                    {% endif %}
+                </div>
+                <hr style="margin: 1rem 0;">
+                <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">
+                    Your Total: {{ farmer_total }} FCFA
+                </div>
+                
+                <!-- Payment Status -->
+                <hr style="margin: 1rem 0;">
+                <h4 style="margin-bottom: 0.5rem;">Payment Status</h4>
+                {% for item in order_items %}
+                    <div style="margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-light); border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">{{ item.product.name }}:</span>
+                            <span class="badge badge-{% if item.payment_received %}success{% else %}warning{% endif %}">
+                                {% if item.payment_received %}✓ Paid{% else %}Pending{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                {% if all_paid %}
+                    <div style="padding: 0.75rem; background: rgba(76, 175, 80, 0.1); border-radius: 4px; font-size: 0.875rem; color: #4CAF50; margin-top: 1rem; border: 1px solid rgba(76, 175, 80, 0.3);">
+                        ✓ All payments received for your items
+                    </div>
+                    {% if order.status == 'completed' %}
+                        <div style="padding: 0.75rem; background: rgba(33, 150, 243, 0.1); border-radius: 4px; font-size: 0.875rem; color: #2196F3; margin-top: 0.5rem; border: 1px solid rgba(33, 150, 243, 0.3);">
+                            🎉 All farmers have received payment. Order is now <strong>Completed</strong>!
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <form method="post" action="{% url 'farmer:mark_payment_received' order.id %}" style="margin-top: 1rem;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success" style="width: 100%;">
+                            💰 Mark Payment as Received
+                        </button>
+                        <small style="display: block; margin-top: 0.5rem; color: var(--text-light); font-size: 0.75rem; text-align: center;">
+                            Click when you have received payment for your products
+                        </small>
+                    </form>
+                {% endif %}
+                
+                {% if delivery %}
+                    <hr style="margin: 1rem 0;">
+                    <h4 style="margin-bottom: 0.5rem;">Delivery Information</h4>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Delivery Code:</strong> {{ delivery.code }}
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Status:</strong> 
+                        <span class="badge badge-info">{{ delivery.get_status_display }}</span>
+                    </div>
+                    {% if delivery.agency %}
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Agency:</strong> {{ delivery.agency.agency_name }}
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Phone:</strong> {{ delivery.agency.phone_number|default:"-" }}
+                        </div>
+                    {% else %}
+                        <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255, 152, 0, 0.1); border-radius: 4px; font-size: 0.875rem; border: 1px solid rgba(255, 152, 0, 0.3); color: #FF9800;">
+                            <strong>No delivery agency assigned yet.</strong>
+                        </div>
+                        {% if available_agencies %}
+                            <a href="{% url 'farmer:select_delivery_agency' order.id %}" class="btn btn-success btn-sm" style="width: 100%;">
+                                🚚 Select Delivery Agency
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% elif available_agencies %}
+                    <hr style="margin: 1rem 0;">
+                    <h4 style="margin-bottom: 1rem;">Select Delivery Agency</h4>
+                    <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 1rem;">
+                        No delivery agency assigned. Select an agency that covers {{ order.delivery_coverage_area.name }}:
+                    </p>
+                    <a href="{% url 'farmer:select_delivery_agency' order.id %}" class="btn btn-success" style="width: 100%; margin-bottom: 1rem;">
+                        🚚 Select Delivery Agency
+                    </a>
+                    <hr style="margin: 1rem 0;">
+                    <h4 style="margin-bottom: 1rem;">Or Contact an Agency</h4>
+                    {% for agency in available_agencies %}
+                        <div class="card" style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-light);">
+                            <div style="margin-bottom: 0.5rem;">
+                                <strong>{{ agency.agency_name }}</strong>
+                            </div>
+                            {% if agency.phone_number %}
+                                <div style="margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                    📞 <a href="tel:{{ agency.phone_number }}">{{ agency.phone_number }}</a>
+                                </div>
+                            {% endif %}
+                            {% if agency.email %}
+                                <div style="margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                    ✉️ <a href="mailto:{{ agency.email }}">{{ agency.email }}</a>
+                                </div>
+                            {% endif %}
+                            <div style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 0.75rem;">
+                                📍 Coverage: {{ agency.coverage_area.name }}
+                            </div>
+                            <a href="{% url 'messaging:farmer_start_conversation' agency.id %}?order={{ order.id }}" class="btn btn-primary btn-sm" style="width: 100%;">
+                                💬 Start Conversation
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% elif order.delivery_coverage_area %}
+                    <hr style="margin: 1rem 0;">
+                    <div style="padding: 1rem; background: rgba(255, 152, 0, 0.1); border-radius: 4px; font-size: 0.875rem; border: 1px solid rgba(255, 152, 0, 0.3); color: #FF9800;">
+                        <strong>No delivery agencies available</strong><br>
+                        No verified agencies found for {{ order.delivery_coverage_area.name }}.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Management - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Payment Management</h1>
+    
+    <!-- Filter Tabs -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color);">
+        <a href="?payment_status=all" 
+           class="{% if payment_status_filter == 'all' %}active{% endif %}" 
+           style="padding: 0.75rem 1.5rem; text-decoration: none; color: var(--text-color); border-bottom: 2px solid {% if payment_status_filter == 'all' %}var(--primary-color){% else %}transparent{% endif %}; margin-bottom: -2px;">
+            All Orders
+        </a>
+        <a href="?payment_status=pending_customer" 
+           class="{% if payment_status_filter == 'pending_customer' %}active{% endif %}" 
+           style="padding: 0.75rem 1.5rem; text-decoration: none; color: var(--text-color); border-bottom: 2px solid {% if payment_status_filter == 'pending_customer' %}var(--primary-color){% else %}transparent{% endif %}; margin-bottom: -2px;">
+            Pending Customer Payment ({{ total_pending_customer }})
+        </a>
+        <a href="?payment_status=received_customer" 
+           class="{% if payment_status_filter == 'received_customer' %}active{% endif %}" 
+           style="padding: 0.75rem 1.5rem; text-decoration: none; color: var(--text-color); border-bottom: 2px solid {% if payment_status_filter == 'received_customer' %}var(--primary-color){% else %}transparent{% endif %}; margin-bottom: -2px;">
+            Customer Paid ({{ total_received_customer }})
+        </a>
+        <a href="?payment_status=pending_farmer" 
+           class="{% if payment_status_filter == 'pending_farmer' %}active{% endif %}" 
+           style="padding: 0.75rem 1.5rem; text-decoration: none; color: var(--text-color); border-bottom: 2px solid {% if payment_status_filter == 'pending_farmer' %}var(--primary-color){% else %}transparent{% endif %}; margin-bottom: -2px;">
+            Pending Farmer Payment ({{ total_pending_farmer }})
+        </a>
+    </div>
+    
+    <!-- Orders List -->
+    {% if orders %}
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order Code</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Payment Status</th>
+                        <th>Total Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><strong>{{ order.code }}</strong></td>
+                            <td>{{ order.customer.full_name }}</td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge badge-{% if order.payment_status == 'received' %}success{% elif order.payment_status == 'pending' %}pending{% elif order.payment_status == 'failed' %}danger{% else %}info{% endif %}">
+                                    {{ order.get_payment_status_display }}
+                                </span>
+                            </td>
+                            <td><strong>{{ order.total_amount }} FCFA</strong></td>
+                            <td>
+                                <a href="{% url 'platform_admin:payment_detail' order.id %}" class="btn btn-primary btn-sm">View Details</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">💰</div>
+            <h3>No orders found</h3>
+            <p>No orders match the selected filter.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

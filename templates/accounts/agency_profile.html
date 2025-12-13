@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <h1 style="margin-bottom: 2rem;">My Profile</h1>
+    
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem;">Agency Information</h2>
+        
+        <div style="margin-bottom: 1rem;">
+            <strong>Agency Name:</strong> {{ agency.agency_name }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Email:</strong> {{ agency.email }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Phone:</strong> {{ agency.phone_number|default:"Not provided" }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Address:</strong> {{ agency.address|default:"Not provided" }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Coverage Area:</strong> {{ agency.coverage_area.name|default:"Not set" }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>License Number:</strong> {{ agency.license_number }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Status:</strong> 
+            <span class="badge badge-{% if agency.status == 'verified' %}success{% elif agency.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                {{ agency.get_status_display }}
+            </span>
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <strong>Member Since:</strong> {{ agency.member_since|date:"M d, Y" }}
+        </div>
+        
+        <a href="{% url 'agency:profile_edit' %}" class="btn btn-primary">Edit Profile</a>
+        <a href="{% url 'agency:change_password' %}" class="btn btn-secondary" style="margin-left: 0.5rem;">Change Password</a>
+    </div>
+</div>
+{% endblock %}
+

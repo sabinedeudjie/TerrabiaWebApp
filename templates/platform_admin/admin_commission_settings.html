@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Commission Settings - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'platform_admin:payments' %}" class="btn btn-secondary">← Back to Payments</a>
+    </div>
+    
+    <h1 style="margin-bottom: 2rem;">Platform Commission Settings</h1>
+    
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem;">Configure Commission</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="commission_type">Commission Type</label>
+                <select id="commission_type" name="commission_type" class="form-control" required onchange="toggleCommissionFields()">
+                    <option value="none" {% if settings.commission_type == 'none' %}selected{% endif %}>No Commission</option>
+                    <option value="percentage" {% if settings.commission_type == 'percentage' %}selected{% endif %}>Percentage</option>
+                    <option value="fixed" {% if settings.commission_type == 'fixed' %}selected{% endif %}>Fixed Amount</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="percentage_field" style="display: {% if settings.commission_type == 'percentage' %}block{% else %}none{% endif %};">
+                <label class="form-label" for="commission_percentage">Commission Percentage</label>
+                <input type="number" id="commission_percentage" name="commission_percentage" class="form-control" 
+                       value="{{ settings.commission_percentage }}" step="0.01" min="0" max="100" 
+                       placeholder="e.g., 5.00 for 5%">
+                <small class="form-text text-muted">Enter the percentage (e.g., 5.00 for 5%)</small>
+            </div>
+            
+            <div class="form-group" id="fixed_field" style="display: {% if settings.commission_type == 'fixed' %}block{% else %}none{% endif %};">
+                <label class="form-label" for="commission_fixed_amount">Fixed Commission Amount (FCFA)</label>
+                <input type="number" id="commission_fixed_amount" name="commission_fixed_amount" class="form-control" 
+                       value="{{ settings.commission_fixed_amount }}" step="0.01" min="0" 
+                       placeholder="e.g., 1000">
+                <small class="form-text text-muted">Fixed amount deducted per order item</small>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="is_active" {% if settings.is_active %}checked{% endif %}>
+                    <span>Active</span>
+                </label>
+                <small class="form-text text-muted">When inactive, no commission will be calculated</small>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <a href="{% url 'platform_admin:payments' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+        
+        <div style="margin-top: 2rem; padding: 1rem; background: rgba(33, 150, 243, 0.1); border-radius: 4px; border: 1px solid rgba(33, 150, 243, 0.3);">
+            <h4 style="margin-bottom: 0.5rem; color: var(--status-processing);">ℹ️ How Commission Works</h4>
+            <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-light);">
+                <li><strong>No Commission:</strong> Farmers receive 100% of their order item total</li>
+                <li><strong>Percentage:</strong> Commission is calculated as a percentage of each order item's total (e.g., 5% of 10,000 FCFA = 500 FCFA commission)</li>
+                <li><strong>Fixed Amount:</strong> A fixed amount is deducted from each order item (e.g., 1,000 FCFA per item)</li>
+            </ul>
+            <p style="margin-top: 1rem; margin-bottom: 0; color: var(--text-light);">
+                <strong>Note:</strong> Commission is calculated per order item, not per order. If an order has multiple items from different farmers, each item's commission is calculated separately.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleCommissionFields() {
+    const commissionType = document.getElementById('commission_type').value;
+    const percentageField = document.getElementById('percentage_field');
+    const fixedField = document.getElementById('fixed_field');
+    
+    if (commissionType === 'percentage') {
+        percentageField.style.display = 'block';
+        fixedField.style.display = 'none';
+    } else if (commissionType === 'fixed') {
+        percentageField.style.display = 'none';
+        fixedField.style.display = 'block';
+    } else {
+        percentageField.style.display = 'none';
+        fixedField.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
+
+

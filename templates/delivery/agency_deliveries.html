@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}My Deliveries - Terrabia{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">My Deliveries</h1>
+    
+    <!-- Status Filter -->
+    <div class="filter-group">
+        <a href="{% url 'agency:deliveries' %}" class="btn {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+        <a href="{% url 'agency:deliveries' %}?status=pending" class="btn {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}">Pending</a>
+        <a href="{% url 'agency:deliveries' %}?status=in_progress" class="btn {% if status_filter == 'in_progress' %}btn-primary{% else %}btn-secondary{% endif %}">In Progress</a>
+        <a href="{% url 'agency:deliveries' %}?status=completed" class="btn {% if status_filter == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">Completed</a>
+    </div>
+    
+    {% if deliveries %}
+        <div class="card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Delivery Code</th>
+                        <th>Order Code</th>
+                        <th>Customer</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Fee</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for delivery in deliveries %}
+                        <tr>
+                            <td><strong>{{ delivery.code }}</strong></td>
+                            <td>{{ delivery.order.code }}</td>
+                            <td>{{ delivery.order.customer.full_name }}</td>
+                            <td>{{ delivery.order.delivery_address|truncatewords:10 }}</td>
+                            <td>
+                                <span class="badge badge-{% if delivery.status == 'pending' %}pending{% elif delivery.status == 'in_progress' %}processing{% elif delivery.status == 'completed' %}delivered{% elif delivery.status == 'cancelled' %}cancelled{% elif delivery.status == 'not_delivered' %}cancelled{% else %}info{% endif %}">
+                                    {{ delivery.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ delivery.fee }} FCFA</td>
+                            <td>
+                                <a href="{% url 'agency:delivery_detail' delivery.id %}" class="btn btn-primary btn-sm">View</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h3>No deliveries found</h3>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
