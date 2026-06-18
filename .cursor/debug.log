@@ -1,2 +1,0 @@
-{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A", "location": "accounts/views.py:25", "message": "register_customer entry", "data": {"method": "GET", "has_post_data": false}, "timestamp": 1765583663726}
-{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A", "location": "accounts/views.py:25", "message": "register_customer entry", "data": {"method": "GET", "has_post_data": false}, "timestamp": 1765585908578}
